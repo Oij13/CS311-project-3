@@ -1,44 +1,32 @@
 import React from 'react';
-import { usePokemonAPI } from '../data/usePokemonAPI';
+import { usePokemonAPI, type Team } from '../data/usePokemonAPI';
 
 interface PokemonTeamBuilderProps {
-  onSlotSelect: (slot: number | null) => void;
-  selectedSlot: number | null;
+  onSlotSelect?: (slot: number | null) => void;
+  selectedSlot?: number | null;
+  team: Team;
+  error: string | null;
+  removePokemonFromTeam: (position: number) => void;
+  clearTeam: () => void;
+  getTeamStats: () => { filledSlots: number; emptySlots: number; totalTypes: number; typeCoverage: number };
 }
 
-const PokemonTeamBuilder: React.FC<PokemonTeamBuilderProps> = ({ onSlotSelect, selectedSlot }) => {
-  const {
-    team,
-    error,
-    removePokemonFromTeam,
-    clearTeam,
-    getTeamStats
-  } = usePokemonAPI();
-
+const PokemonTeamBuilder: React.FC<PokemonTeamBuilderProps> = ({ 
+  onSlotSelect, 
+  selectedSlot, 
+  team,
+  error,
+  removePokemonFromTeam,
+  clearTeam,
+  getTeamStats
+}) => {
   const stats = getTeamStats();
 
-  const getTypeColor = (type: string): string => {
-    const typeColors: { [key: string]: string } = {
-      normal: 'bg-gray-400',
-      fire: 'bg-red-500',
-      water: 'bg-blue-500',
-      electric: 'bg-yellow-400',
-      grass: 'bg-green-500',
-      ice: 'bg-blue-300',
-      fighting: 'bg-red-700',
-      poison: 'bg-purple-500',
-      ground: 'bg-yellow-600',
-      flying: 'bg-indigo-400',
-      psychic: 'bg-pink-500',
-      bug: 'bg-green-400',
-      rock: 'bg-yellow-800',
-      ghost: 'bg-purple-700',
-      dragon: 'bg-indigo-700',
-      dark: 'bg-gray-800',
-      steel: 'bg-gray-500',
-      fairy: 'bg-pink-300',
-    };
-    return typeColors[type] || 'bg-gray-400';
+  const {getTypeColor} = usePokemonAPI();
+  const handleSlotClick = (index: number) => {
+    if (onSlotSelect) {
+      onSlotSelect(selectedSlot === index ? null : index);
+    }
   };
 
   return (
@@ -71,12 +59,12 @@ const PokemonTeamBuilder: React.FC<PokemonTeamBuilderProps> = ({ onSlotSelect, s
         {team.pokemon.map((pokemon, index) => (
           <div
             key={index}
-            className={`border-2 rounded p-2 cursor-pointer transition-colors ${
+            className={`border-2 rounded p-2 ${onSlotSelect ? 'cursor-pointer' : ''} transition-colors ${
               selectedSlot === index
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400'
             }`}
-            onClick={() => onSlotSelect(selectedSlot === index ? null : index)}
+            onClick={() => handleSlotClick(index)}
           >
             {pokemon ? (
               <div className="flex items-center space-x-2">
@@ -111,10 +99,10 @@ const PokemonTeamBuilder: React.FC<PokemonTeamBuilderProps> = ({ onSlotSelect, s
                 </button>
               </div>
             ) : (
-              <div className="text-gray-400 text-center py-4">
+              <div className="text-gray-400 text-center pb-4">
                 <div className="text-2xl mb-1">+</div>
                 <div className="text-xs">Slot {index + 1}</div>
-                <div className="text-xs">Click to select</div>
+                {onSlotSelect && <div className="text-xs">Click to select</div>}
               </div>
             )}
           </div>
